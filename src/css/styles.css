@@ -60,6 +60,11 @@ ul {
   list-style: none;
 }
 
+.gallery-item:hover {
+  transform: scale(1.05);
+  transition: transform 0.3s;
+}
+
 .gallery-item {
   position: relative;
 }
@@ -68,12 +73,9 @@ ul {
   display: block;
   width: 360px;
   height: 200px;
-  transition: transform 0.3s;
+  
 }
 
-.gallery-item:hover .gallery-image {
-  transform: scale(1.04);
-}
 
 .timer {
   display: flex;
@@ -95,9 +97,6 @@ form {
   margin-bottom: 32px;
 }
 
-/* .form-input {
-    
-  } */
 
 input {
   font-size: 16px;
@@ -128,6 +127,7 @@ button {
   letter-spacing: 1.5px;
   padding-right: 16px;
   padding-left: 16px;
+
   cursor: pointer;
 }
 
@@ -135,6 +135,12 @@ button:hover,
 button:focus {
   outline: none;
   background: #6c8cff;
+}
+
+.loading-button {
+  margin-top: 32px;
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 
 .container {
@@ -161,7 +167,9 @@ button:focus {
 }
 
 
-
+.hidden {
+  display: none;
+}
 
 
 .loader.hidden {

@@ -1,128 +1,88 @@
-// Описаний у документації
 import axios from 'axios';
 import iziToast from 'izitoast';
-// Додатковий імпорт стилів
 import 'izitoast/dist/css/iziToast.min.css';
-
-// Описаний в документації
 import SimpleLightbox from 'simplelightbox';
-// Додатковий імпорт стилів
 import 'simplelightbox/dist/simple-lightbox.min.css';
-
-
 
 const form = document.querySelector('.form');
 const elementsContainer = document.querySelector('.gallery');
 const loader = document.querySelector('.loader');
+const loadButton = document.querySelector('.loading-button');
+const BASE_URL = 'https://pixabay.com/api/';
+const queryParams = {
+  query: '',
+  apiKey: '41967229-af64f083e47c21f795887158a',
+  orientation: 'horizontal',
+  image_type: 'photo',
+  safesearch: 'true',
+  per_page: 40,
+  page: 1,
+};
+
+const lightbox = new SimpleLightbox('.gallery-item a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+});
 
 form.addEventListener('submit', handleSubmit);
 
-const instance = axios.create({
-  baseURL: 'https://pixabay.com/api/',
-  params: {
-    key: '41967229-af64f083e47c21f795887158a',
-    orientation: 'horizontal',
-    image_type: 'photo',
-    safesearch: 'true',
-  },
-});
-
-
-
-
 async function handleSubmit(event) {
   event.preventDefault();
-  loader.classList.remove('hidden');
-
-  const inputValue = event.currentTarget.elements.serching.value;
-
-  try {
-    const data = await searchPictures(inputValue);
-    createMarkup(data);
-  } catch {
-    onError();
-  } finally {
-    loader.classList.add('hidden');
-    form.reset();
+  elementsContainer.innerHTML = '';
+  queryParams.page = 1;
+  queryParams.query =
+    event.currentTarget.elements.serching.value.trim();
+  
+  if (!queryParams.query) {
+    return;
   }
-}
-
-async function searchPictures(searchingItem) {
   try {
+    const {hits, totalHits} = await searchPictures(queryParams);
+  
+   console.log({hits, totalHits})
+  
+   console.log("ayay")
 
-    const resp = await instance.get('/', {
-      params: {
-        q: searchingItem,
-      },
-    });
+   queryParams.maxPage = Math.ceil(totalHits / queryParams.per_page);
 
-    return resp.data;
-    
+   console.log("bbbb")
+   console.log(queryParams)
+  
+
   } catch (error) {
-    console.error(error);
-    
+    console.log(error)
   }
+
   
 }
 
-function createMarkup({ hits }) {
-  const lightbox = new SimpleLightbox('.gallery-item a', {
-    captionsData: 'alt',
-    captionDelay: 250,
-  });
-
-  if (hits.length === 0) {
-    onError();
-  } else {
-    const markup = hits.map(
-      ({
-        webformatURL,
-        largeImageURL,
-        tags,
-        likes,
-        views,
-        comments,
-        downloads,
-      }) =>
-        `<li class="gallery-item">
-         <a class="gallery-link" href="${largeImageURL}">
-         <img class="gallery-image"
-         src="${webformatURL}"
-         alt="${tags}" /></a>
-         <container class="details-container">
-         <div class="details">
-         <h3 class="details-title">Likes</h3>
-         <p class="details-text">${likes}</p>
-         </div>
-         <div class="details">
-         <h3 class="details-title">Views</h3>
-         <p class="details-text">${views}</p>
-         </div>
-         <div class="details">
-         <h3 class="details-title">Comments</h3>
-        <p class="details-text">${comments}</p>
-        </div>
-        <div class="details">
-        <h3 class="details-title">Downloads</h3>
-        <p class="details-text">${downloads}</p>
-        </div></container> 
-        </li>`
-    );
-
-    elementsContainer.innerHTML = markup.join('');
-    lightbox.refresh();
-  }
+async function searchPictures({ query, page = 1, per_page }) {
+ 
+    return await axios.get(`${BASE_URL}`, {
+      params: {
+        
+        key: '41967229-af64f083e47c21f795887158a',
+        q: query,
+        orientation: 'horizontal',
+        image_type: 'photo',
+        safesearch: 'true',
+        per_page,
+        page,
+        
+      },
+    }).then(({ data }) => data);
+    
 }
 
-function onError(error) {
-  console.log(error);
-  elementsContainer.innerHTML = '';
-  iziToast.show({
-    message:
-      'Sorry, there are no images matching your search query. Please try again!',
-    position: 'topRight',
-    backgroundColor: '#EF4040',
-    titleColor: '#FFFFFF',
-    messageColor: '#FFFFFF',
-  });
-}
+// function onError() {
+//   loader.classList.add('hidden');
+//   elementsContainer.innerHTML = '';
+//   iziToast.show({
+//     message:
+//       'Sorry, there are no images matching your search query. Please try again!',
+//     position: 'topRight',
+//     backgroundColor: '#EF4040',
+//     titleColor: '#FFFFFF',
+//     messageColor: '#FFFFFF',
+//   });
+// }
