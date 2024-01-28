@@ -18,7 +18,6 @@ const queryParams = {
   per_page: 40,
   page: 1,
 };
-
 const lightbox = new SimpleLightbox('.gallery-item a', {
   captionsData: 'alt',
   captionDelay: 250,
@@ -30,37 +29,36 @@ async function handleSubmit(event) {
   event.preventDefault();
   elementsContainer.innerHTML = '';
   queryParams.page = 1;
-  queryParams.query =
-    event.currentTarget.elements.serching.value.trim();
-  
+  queryParams.query = event.currentTarget.elements.serching.value.trim();
+
   if (!queryParams.query) {
     return;
   }
   try {
-    const {hits, totalHits} = await searchPictures(queryParams);
-  
-   console.log({hits, totalHits})
-  
-   console.log("ayay")
+    const { hits, totalHits } = await searchPictures(queryParams);
 
-   queryParams.maxPage = Math.ceil(totalHits / queryParams.per_page);
+    queryParams.maxPage = Math.ceil(totalHits / queryParams.per_page);
 
-   console.log("bbbb")
-   console.log(queryParams)
-  
-
+    console.log({ hits, totalHits });
+    createMarkup(hits, totalHits);
+    console.log(queryParams.maxPage);
+    if (hits.length > 0 && hits.length !== totalHits) {
+      show(loadButton);
+      loadButton.addEventListener("click", handleLoading);
+    } else {
+      hide(loadButton);
+    }
   } catch (error) {
-    console.log(error)
+    console.log(error);
+  } finally {
+    form.reset();
   }
-
-  
 }
 
 async function searchPictures({ query, page = 1, per_page }) {
- 
-    return await axios.get(`${BASE_URL}`, {
+  return await axios
+    .get(`${BASE_URL}`, {
       params: {
-        
         key: '41967229-af64f083e47c21f795887158a',
         q: query,
         orientation: 'horizontal',
@@ -68,11 +66,74 @@ async function searchPictures({ query, page = 1, per_page }) {
         safesearch: 'true',
         per_page,
         page,
-        
       },
-    }).then(({ data }) => data);
-    
+    })
+    .then(({ data }) => data);
 }
+
+function createMarkup(hits) {
+  const markup = hits.map(
+    ({
+      webformatURL,
+      largeImageURL,
+      tags,
+      likes,
+      views,
+      comments,
+      downloads,
+    }) =>
+      `<li class="gallery-item">
+         <a class="gallery-link" href="${largeImageURL}">
+         <img class="gallery-image"
+         src="${webformatURL}"
+         alt="${tags}" /></a>
+         <container class="details-container">
+         <div class="details">
+         <h3 class="details-title">Likes</h3>
+         <p class="details-text">${likes}</p>
+         </div>
+         <div class="details">
+         <h3 class="details-title">Views</h3>
+         <p class="details-text">${views}</p>
+         </div>
+         <div class="details">
+         <h3 class="details-title">Comments</h3>
+        <p class="details-text">${comments}</p>
+        </div>
+        <div class="details">
+        <h3 class="details-title">Downloads</h3>
+        <p class="details-text">${downloads}</p>
+        </div></container> 
+        </li>`
+  );
+  elementsContainer.insertAdjacentHTML('beforeend', markup);
+}
+
+
+async function handleLoading() {
+  queryParams.page += 1;
+  disable();
+
+
+  try {
+    const { hits } = await searchPictures(queryParams); // робимо запит на наступну сторінку новин
+    createMarkup(hits)
+  
+
+  } catch (err) {
+    console.log(err);
+  } finally {
+    enable()
+    if (queryParams.page === queryParams.maxPage) {
+      hide();
+      loadButton.removeEventListener("click", handleLoading);
+    }
+  }
+
+
+}
+
+
 
 // function onError() {
 //   loader.classList.add('hidden');
@@ -86,3 +147,21 @@ async function searchPictures({ query, page = 1, per_page }) {
 //     messageColor: '#FFFFFF',
 //   });
 // }
+
+function hide() {
+  loadButton.classList.add('hidden');
+}
+
+function show() {
+  loadButton.classList.remove('hidden');
+}
+
+function enable() {
+  loader.classList.add('hidden');
+  loadButton.disabled = false;
+}
+
+function disable() {
+  loader.classList.remove('hidden');
+  loadButton.disabled = true;
+}
