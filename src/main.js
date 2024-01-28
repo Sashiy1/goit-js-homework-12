@@ -15,13 +15,14 @@ const queryParams = {
   orientation: 'horizontal',
   image_type: 'photo',
   safesearch: 'true',
-  per_page: 3,
+  per_page: 20,
   page: 1,
 };
 const lightbox = new SimpleLightbox('.gallery-item a', {
   captionsData: 'alt',
   captionDelay: 250,
 });
+
 
 form.addEventListener('submit', handleSubmit);
 
@@ -121,6 +122,8 @@ function createMarkup(hits) {
         </li>`
   );
   elementsContainer.insertAdjacentHTML('beforeend', markup);
+
+
   lightbox.refresh();
   
 }
@@ -132,7 +135,13 @@ async function handleLoading() {
   try {
     const { hits } = await searchPictures(queryParams); // робимо запит на наступну сторінку новин
     createMarkup(hits)
+    const galleryItem = document.querySelector('.gallery-item')
+    const rect = galleryItem.getBoundingClientRect();
+    window.scrollBy({
+      top: rect.height * 2,
 
+      behavior: "smooth",
+    });
   } catch (err) {
     console.log(err);
   } finally {
