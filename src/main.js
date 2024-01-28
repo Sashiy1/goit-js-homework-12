@@ -15,7 +15,7 @@ const queryParams = {
   orientation: 'horizontal',
   image_type: 'photo',
   safesearch: 'true',
-  per_page: 40,
+  per_page: 3,
   page: 1,
 };
 const lightbox = new SimpleLightbox('.gallery-item a', {
@@ -30,28 +30,41 @@ async function handleSubmit(event) {
   elementsContainer.innerHTML = '';
   queryParams.page = 1;
   queryParams.query = event.currentTarget.elements.serching.value.trim();
-
-  if (!queryParams.query) {
+  loader.classList.remove('hidden');
+  if (!queryParams.query && queryParams.query !== '') {
     return;
+
   }
   try {
     const { hits, totalHits } = await searchPictures(queryParams);
-
     queryParams.maxPage = Math.ceil(totalHits / queryParams.per_page);
-
-    console.log({ hits, totalHits });
     createMarkup(hits, totalHits);
-    console.log(queryParams.maxPage);
+    
+    loader.classList.add('hidden');
+
     if (hits.length > 0 && hits.length !== totalHits) {
       show(loadButton);
       loadButton.addEventListener("click", handleLoading);
+
     } else {
+      iziToast.show({
+        message:
+          'Sorry, there are no images matching your search query. Please try again!',
+        position: 'topRight',
+        backgroundColor: '#EF4040',
+        titleColor: '#FFFFFF',
+        messageColor: '#FFFFFF',
+      });
       hide(loadButton);
+
     }
   } catch (error) {
     console.log(error);
+
+  
   } finally {
     form.reset();
+
   }
 }
 
@@ -69,6 +82,7 @@ async function searchPictures({ query, page = 1, per_page }) {
       },
     })
     .then(({ data }) => data);
+
 }
 
 function createMarkup(hits) {
@@ -107,18 +121,17 @@ function createMarkup(hits) {
         </li>`
   );
   elementsContainer.insertAdjacentHTML('beforeend', markup);
+  lightbox.refresh();
+  
 }
-
 
 async function handleLoading() {
   queryParams.page += 1;
   disable();
 
-
   try {
     const { hits } = await searchPictures(queryParams); // робимо запит на наступну сторінку новин
     createMarkup(hits)
-  
 
   } catch (err) {
     console.log(err);
@@ -130,23 +143,7 @@ async function handleLoading() {
     }
   }
 
-
 }
-
-
-
-// function onError() {
-//   loader.classList.add('hidden');
-//   elementsContainer.innerHTML = '';
-//   iziToast.show({
-//     message:
-//       'Sorry, there are no images matching your search query. Please try again!',
-//     position: 'topRight',
-//     backgroundColor: '#EF4040',
-//     titleColor: '#FFFFFF',
-//     messageColor: '#FFFFFF',
-//   });
-// }
 
 function hide() {
   loadButton.classList.add('hidden');
